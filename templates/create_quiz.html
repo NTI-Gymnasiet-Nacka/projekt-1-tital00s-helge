@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Quiz</title>
+</head>
+<body>
+    {% if session['creating_quiz'] %}
+        <h1>Create Your Quiz</h1>
+        <form action="{{ url_for('submit_quiz') }}" method="post">
+            <label for="question">Question:</label>
+            <input type="text" id="question" name="question" required><br>
+
+            <label for="option_a">Option A:</label>
+            <input type="text" id="option_a" name="option_a" required><br>
+
+            <label for="option_b">Option B:</label>
+            <input type="text" id="option_b" name="option_b" required><br>
+
+            <label for="option_c">Option C:</label>
+            <input type="text" id="option_c" name="option_c" required><br>
+
+            <label for="option_d">Option D:</label>
+            <input type="text" id="option_d" name="option_d" required><br>
+
+            <label for="correct_answer">Correct Answer (A, B, C, or D):</label>
+            <input type="text" id="correct_answer" name="correct_answer" required><br>
+
+            <button type="submit">Add Question</button>
+            <button type="button" onclick="finishQuiz()">Finish Quiz</button>
+        </form>
+    {% else %}
+        <h1>Quiz Finished</h1>
+        <form action="{{ url_for('add_to_library') }}" method="post">
+            <label for="quiz_name">Enter Quiz Name:</label>
+            <input type="text" id="quiz_name" name="quiz_name" required><br>
+            <button type="submit">Add to Library</button>
+        </form>
+    {% endif %}
+    <a href="{{ url_for('home') }}">Back</a>
+
+    <script>
+        function finishQuiz() {
+            var finishConfirmation = confirm("Do you want to finish the quiz?");
+            if (finishConfirmation) {
+                window.location.href = "{{ url_for('finish_quiz') }}";
+            }
+        }
+    </script>
+</body>
+</html>
