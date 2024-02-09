@@ -6,45 +6,102 @@
     <title>Create Quiz</title>
 </head>
 <body>
-    {% if session['creating_quiz'] %}
+    {% if session.get('creating_quiz', False) %}
         <h1>Create Your Quiz</h1>
-        <form action="{{ url_for('submit_quiz') }}" method="post">
+        <form action="{{ url_for('submit_quiz') }}" method="post" id="quizForm">
             <label for="question">Question:</label>
             <input type="text" id="question" name="question" required><br>
 
-            <label for="option_a">Option A:</label>
-            <input type="text" id="option_a" name="option_a" required><br>
+            <div id="additionalOptions">
+                <!-- Additional options will be dynamically added here -->
+            </div>
 
-            <label for="option_b">Option B:</label>
-            <input type="text" id="option_b" name="option_b" required><br>
+            <div id="correctAnswerCheckboxes">
+                <!-- Initially, no checkboxes for correct answers -->
+            </div>
 
-            <label for="option_c">Option C:</label>
-            <input type="text" id="option_c" name="option_c" required><br>
-
-            <label for="option_d">Option D:</label>
-            <input type="text" id="option_d" name="option_d" required><br>
-
-            <label for="correct_answer">Correct Answer (A, B, C, or D):</label>
-            <input type="text" id="correct_answer" name="correct_answer" required><br>
+            <button type="button" onclick="addOption()" id="addOptionButton">Add Option</button><br>
 
             <button type="submit">Add Question</button>
-            <button type="button" onclick="finishQuiz()">Finish Quiz</button>
         </form>
+
+        <button onclick="finishQuiz()" id="finishQuizButton">Finish Quiz</button>
     {% else %}
         <h1>Quiz Finished</h1>
         <form action="{{ url_for('add_to_library') }}" method="post">
             <label for="quiz_name">Enter Quiz Name:</label>
             <input type="text" id="quiz_name" name="quiz_name" required><br>
-            <button type="submit">Add to Library</button>
+            <button type="submit">Finish Quiz</button>
         </form>
     {% endif %}
+
     <a href="{{ url_for('home') }}">Back</a>
 
     <script>
+        var optionCounter = 0;
+
+        function addOption() {
+            if (optionCounter >= 4) {
+                alert("You can add a maximum of 4 options.");
+                document.getElementById('addOptionButton').style.display = 'none';
+                return;
+            }
+
+            var optionsContainer = document.getElementById('additionalOptions');
+            var correctAnswerCheckboxes = document.getElementById('correctAnswerCheckboxes');
+            var optionLabel = String.fromCharCode(65 + optionCounter);  // 'A' for the first option, 'B' for the second, and so on
+
+            // Add option input
+            var input = document.createElement('input');
+            input.setAttribute('type', 'text');
+            input.setAttribute('id', 'option_' + optionLabel);
+            input.setAttribute('name', 'option_' + optionLabel);
+            input.required = true;
+
+            optionsContainer.appendChild(document.createTextNode('Option ' + optionLabel + ': '));
+            optionsContainer.appendChild(input);
+            optionsContainer.appendChild(document.createElement('br'));
+
+            // Add corresponding correct answer checkbox
+            var checkbox = document.createElement('input');
+            checkbox.setAttribute('type', 'checkbox');
+            checkbox.setAttribute('id', 'correct_' + optionLabel);
+            checkbox.setAttribute('name', 'correct_answers');
+            checkbox.setAttribute('value', optionLabel);
+
+            correctAnswerCheckboxes.appendChild(document.createTextNode(optionLabel));
+            correctAnswerCheckboxes.appendChild(checkbox);
+            correctAnswerCheckboxes.appendChild(document.createElement('br'));
+
+            optionCounter++;
+
+            if (optionCounter >= 4) {
+                document.getElementById('addOptionButton').style.display = 'none';
+            }
+        }
+
         function finishQuiz() {
-            var finishConfirmation = confirm("Do you want to finish the quiz?");
-            if (finishConfirmation) {
-                window.location.href = "{{ url_for('finish_quiz') }}";
+            var questions = document.querySelectorAll('input[name^="question"]');
+            var answers = document.querySelectorAll('input[name^="option_"]');
+            var checkboxes = document.querySelectorAll('input[name="correct_answers"]:checked');
+
+            // Check if the current question is finished
+            var currentQuestionFinished = answers.length >= 1 && checkboxes.length >= 1;
+
+            if (questions.length >= 1) {
+                var finishConfirmation = confirm("Do you want to finish the quiz?");
+                if (finishConfirmation) {
+                    if (currentQuestionFinished) {
+                        // Proceed to finish the quiz, including the current question
+                        window.location.href = "{{ url_for('add_to_library') }}";
+                    } else {
+                        // Skip the current question and finish the quiz
+                        alert("The current question is unfinished and will be skipped.");
+                        window.location.href = "{{ url_for('add_to_library') }}";
+                    }
+                }
+            } else {
+                alert("Please add at least one question before finishing the quiz.");
             }
         }
     </script>
