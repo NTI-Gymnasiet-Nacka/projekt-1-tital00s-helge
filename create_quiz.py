@@ -56,6 +56,28 @@ class QuizMaker:
 
         self.button_back = tk.Button(self.master, text="Back to Start Page", command=self.back_to_start_page)
         self.button_back.pack()
+        
+    def add_question(self):
+        question_text = self.entry_question.get()
+        options_text = [entry.get() for entry in self.options]
+        correct_answers = [var.get() for var in (cb["variable"] for cb in self.correct_checkboxes)]
+
+        if not question_text or not any(options_text):
+            messagebox.showerror("Error", "Question and options cannot be empty.")
+            return
+
+        question_data = {
+            'question': question_text,
+            'options': [{'text': text, 'correct': correct} for text, correct in zip(options_text, correct_answers)]
+        }
+        self.questions.append(question_data)
+
+        messagebox.showinfo("Quiz App", "Question added successfully!")
+        self.entry_question.delete(0, tk.END)
+        for entry in self.options:
+            entry.delete(0, tk.END)
+        for checkbox in self.correct_checkboxes:
+            checkbox.deselect()
 
     def finish_quiz(self):
         if not self.quiz_name.get() or not self.questions:
