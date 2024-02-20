@@ -1,14 +1,18 @@
 import tkinter as tk
 from tkinter import messagebox
-from create_quiz import QuizMaker
 from quiz_library import QuizLibrary
+from create_quiz import QuizMaker
 import csv
 
 class MainApp:
     def __init__(self, master):
         self.master = master
         self.master.title("Quiz App")
-        self.master.geometry("600x400")
+        self.master.geometry("800x600")
+
+        with open('quiz_library.csv', mode='a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Quiz Name', 'Question', 'Option 1', 'Correct 1', 'Option 2', 'Correct 2', 'Option 3', 'Correct 3', 'Option 4', 'Correct 4'])
 
         self.show_start_page()
 
@@ -25,6 +29,9 @@ class MainApp:
         self.button_quiz_library = tk.Button(self.master, text="Quiz Library", command=self.open_quiz_library)
         self.button_quiz_library.pack()
 
+        self.button_exit = tk.Button(self.master, text="Exit", command=self.exit_app)
+        self.button_exit.pack()
+
     def create_quiz(self):
         quiz_maker_window = tk.Toplevel(self.master)
         QuizMaker(quiz_maker_window, self)
@@ -33,13 +40,8 @@ class MainApp:
         quiz_library_window = tk.Toplevel(self.master)
         QuizLibrary(quiz_library_window, self)
 
-    def save_to_library(self, quiz_name, questions):
-        with open('quiz_library.csv', mode='a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([quiz_name, questions])
-
-    def delete_quiz(self, quiz_name):
-        messagebox.showinfo("Quiz App", "Quiz deleted.")
+    def exit_app(self):
+        self.master.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()

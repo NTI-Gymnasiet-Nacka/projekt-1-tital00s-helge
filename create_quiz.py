@@ -1,11 +1,13 @@
 import tkinter as tk
 from tkinter import messagebox
+import csv
 
 class QuizMaker:
     def __init__(self, master, main_app):
         self.master = master
         self.main_app = main_app
         self.master.title("Create Quiz")
+        self.master.geometry("600x400")
 
         self.quiz_name = tk.StringVar()
         self.questions = []
@@ -23,13 +25,25 @@ class QuizMaker:
         self.label_question.pack()
         self.entry_question.pack()
 
+        self.options_frame = tk.Frame(self.master)
+        self.options_frame.pack()
+
+        self.label_correct = tk.Label(self.master, text="Correct:")
+        self.label_correct.pack()
+
         self.options = []
+        self.correct_checkboxes = []
         for i in range(4):
-            option_label = tk.Label(self.master, text=f"Option {chr(65 + i)}:")
-            option_entry = tk.Entry(self.master)
-            option_label.pack()
-            option_entry.pack()
+            option_label = tk.Label(self.options_frame, text=f"Option {chr(65 + i)}:")
+            option_entry = tk.Entry(self.options_frame)
+            correct_checkbox = tk.Checkbutton(self.options_frame, variable=tk.BooleanVar())
+
+            option_label.grid(row=i, column=0, sticky=tk.E)
+            option_entry.grid(row=i, column=1)
+            correct_checkbox.grid(row=i, column=2, sticky=tk.W)
+
             self.options.append(option_entry)
+            self.correct_checkboxes.append(correct_checkbox)
 
         self.button_add_question = tk.Button(self.master, text="Add Question", command=self.add_question)
         self.button_add_question.pack()
@@ -43,45 +57,44 @@ class QuizMaker:
         self.button_back = tk.Button(self.master, text="Back to Start Page", command=self.back_to_start_page)
         self.button_back.pack()
 
-    def add_question(self):
-        question_text = self.entry_question.get()
-        options_text = [entry.get() for entry in self.options]
-
-        if not question_text or not any(options_text):
-            messagebox.showerror("Error", "Question and options cannot be empty.")
-            return
-
-        question_data = {
-            'question': question_text,
-            'options': options_text
-        }
-        self.questions.append(question_data)
-
-        messagebox.showinfo("Quiz App", "Question added successfully!")
-        self.entry_question.delete(0, tk.END)
-        for entry in self.options:
-            entry.delete(0, tk.END)
-
     def finish_quiz(self):
         if not self.quiz_name.get() or not self.questions:
             messagebox.showerror("Error", "Quiz name and questions are required.")
             return
 
-        self.main_app.save_to_library(self.quiz_name.get(), self.questions)
-        messagebox.showinfo("Quiz App", "Quiz finished!\nSaved to the library.")
-        self.back_to_start_page()
+        try:
+            with open('quiz_library.csv', mode='a', newline='') as file:
+                writer = csv.writer(file)
+                for question in self.questions:
+                    row = [self.quiz_name.get(), question['question']]
+                    row.extend([option['text'] for option in question['options']])
+                    row.extend([int(option['correct']) for option in question['options']])
+                    writer.writerow(row)
+
+            messagebox.showinfo("Quiz App", "Quiz finished!\nSaved to the library.")
+            self.back_to_start_page()
+
+        except FileNotFoundError:
+            pass
 
     def delete_quiz(self):
-        self.main_app.delete_quiz(self.quiz_name.get())
-        messagebox.showinfo("Quiz App", "Quiz deleted.")
-        self.back_to_start_page()
+        try:
+            with open('quiz_library.csv', mode='r') as file:
+                reader = csv.reader(file)
+                rows = list(reader)
+
+            with open('quiz_library.csv', mode='w', newline='') as file:
+                writer = csv.writer(file)
+                for row in rows:
+                    if row[0] != self.quiz_name.get():
+                        writer.writerow(row)
+
+            messagebox.showinfo("Quiz App", "Quiz deleted.")
+            self.back_to_start_page()
+
+        except FileNotFoundError:
+            pass
 
     def back_to_start_page(self):
         self.master.destroy()
         self.main_app.show_start_page()
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = QuizMaker(root)
-    root.mainloop()
