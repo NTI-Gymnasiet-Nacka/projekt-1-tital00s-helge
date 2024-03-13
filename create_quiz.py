@@ -28,22 +28,20 @@ class QuizMaker:
         self.options_frame = tk.Frame(self.master)
         self.options_frame.pack()
 
-        self.label_correct = tk.Label(self.master, text="Correct:")
-        self.label_correct.pack()
-
         self.options = []
         self.correct_checkboxes = []
         for i in range(4):
             option_label = tk.Label(self.options_frame, text=f"Option {chr(65 + i)}:")
             option_entry = tk.Entry(self.options_frame)
-            correct_checkbox = tk.Checkbutton(self.options_frame, variable=tk.BooleanVar())
+            correct_var = tk.BooleanVar()
+            correct_checkbox = tk.Checkbutton(self.options_frame, variable=correct_var)
 
             option_label.grid(row=i, column=0, sticky=tk.E)
             option_entry.grid(row=i, column=1)
             correct_checkbox.grid(row=i, column=2, sticky=tk.W)
 
             self.options.append(option_entry)
-            self.correct_checkboxes.append(correct_checkbox)
+            self.correct_checkboxes.append(correct_var)
 
         self.button_add_question = tk.Button(self.master, text="Add Question", command=self.add_question)
         self.button_add_question.pack()
@@ -56,11 +54,11 @@ class QuizMaker:
 
         self.button_back = tk.Button(self.master, text="Back to Start Page", command=self.back_to_start_page)
         self.button_back.pack()
-        
+
     def add_question(self):
         question_text = self.entry_question.get()
         options_text = [entry.get() for entry in self.options]
-        correct_answers = [var.get() for var in (cb["variable"] for cb in self.correct_checkboxes)]
+        correct_answers = [var.get() for var in self.correct_checkboxes]
 
         if not question_text or not any(options_text):
             messagebox.showerror("Error", "Question and options cannot be empty.")
@@ -77,11 +75,15 @@ class QuizMaker:
         for entry in self.options:
             entry.delete(0, tk.END)
         for checkbox in self.correct_checkboxes:
-            checkbox.deselect()
+            checkbox.set(0)
 
     def finish_quiz(self):
         if not self.quiz_name.get() or not self.questions:
             messagebox.showerror("Error", "Quiz name and questions are required.")
+            return
+
+        if not any(var.get() for var in self.correct_checkboxes):
+            messagebox.showerror("Error", "At least one correct answer is required.")
             return
 
         try:
@@ -102,11 +104,11 @@ class QuizMaker:
     def delete_quiz(self):
         try:
             with open('quiz_library.csv', mode='r') as file:
-                reader = csv.reader(file)
+                reader = tk.reader(file)
                 rows = list(reader)
 
             with open('quiz_library.csv', mode='w', newline='') as file:
-                writer = csv.writer(file)
+                writer = tk.writer(file)
                 for row in rows:
                     if row[0] != self.quiz_name.get():
                         writer.writerow(row)
@@ -120,3 +122,8 @@ class QuizMaker:
     def back_to_start_page(self):
         self.master.destroy()
         self.main_app.show_start_page()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = QuizMaker(root)
+    root.mainloop()
