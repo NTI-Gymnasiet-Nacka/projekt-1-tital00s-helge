@@ -3,9 +3,10 @@ from tkinter import messagebox
 import csv
 
 class QuizMaker:
-    def __init__(self, master, main_app):
+    def __init__(self, master, main_app, csv_file='quiz_library.csv'):
         self.master = master
         self.main_app = main_app
+        self.csv_file = csv_file
         self.master.title("Create Quiz")
         self.master.geometry("600x400")
 
@@ -78,28 +79,20 @@ class QuizMaker:
             checkbox.set(0)
 
     def finish_quiz(self):
-        if not self.quiz_name.get() or not self.questions:
-            messagebox.showerror("Error", "Quiz name and questions are required.")
+        if not self.quiz_name.get().strip() or not self.questions:
+            messagebox.showerror("Error", "Quiz name and at least one question are required.")
             return
 
-        if not any(var.get() for var in self.correct_checkboxes):
-            messagebox.showerror("Error", "At least one correct answer is required.")
-            return
+        with open(self.csv_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            for question in self.questions:
+                row = [self.quiz_name.get(), question['question']]
+                for option in question['options']:
+                    row.extend([option['text'], int(option['correct'])])
+                writer.writerow(row)
 
-        try:
-            with open('quiz_library.csv', mode='a', newline='') as file:
-                writer = csv.writer(file)
-                for question in self.questions:
-                    row = [self.quiz_name.get(), question['question']]
-                    row.extend([option['text'] for option in question['options']])
-                    row.extend([int(option['correct']) for option in question['options']])
-                    writer.writerow(row)
-
-            messagebox.showinfo("Quiz App", "Quiz finished!\nSaved to the library.")
-            self.back_to_start_page()
-
-        except FileNotFoundError:
-            pass
+        messagebox.showinfo("Quiz App", "Quiz saved successfully.")
+        self.back_to_start_page()
 
     def delete_quiz(self):
         try:

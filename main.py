@@ -1,19 +1,13 @@
 import tkinter as tk
-from tkinter import messagebox
+import tkinter as tk
 from quiz_library import QuizLibrary
 from create_quiz import QuizMaker
-import csv
 
 class MainApp:
     def __init__(self, master):
         self.master = master
         self.master.title("Quiz App")
         self.master.geometry("800x600")
-
-        with open('quiz_library.csv', mode='a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['Quiz Name', 'Question', 'Option 1', 'Correct 1', 'Option 2', 'Correct 2', 'Option 3', 'Correct 3', 'Option 4', 'Correct 4'])
-
         self.show_start_page()
 
     def show_start_page(self):
